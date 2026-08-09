@@ -6,7 +6,16 @@ import img2pdf
 import zipfile
 import base64  # Needed to embed the icon
 import os
-
+# Hide the GitHub icon, top menu, and Streamlit footer
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            header {visibility: hidden;}
+            footer {visibility: hidden;}
+            .stAppDeployButton {display:none;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 # --- ADVANCED PWA ICON HACK ---
 # This block reads your icon.png and embeds it as base64 data in the HTML header.
 # This makes it load properly on mobile home screens even locally.
