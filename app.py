@@ -6,26 +6,35 @@ import img2pdf
 import zipfile
 import base64  # Needed to embed the icon
 import os
-# Sniper approach: Hide ONLY the GitHub link, Deploy button, and footer
-hide_streamlit_style = """
-            <style>
-            /* Hide the main menu (3 dots) */
-            #MainMenu {visibility: hidden;}
-            
-            /* Hide the Streamlit footer */
-            footer {visibility: hidden;}
-            
-            /* Hide the exact Deploy button */
-            .stAppDeployButton {display: none;}
-            
-            /* Sniper target: Any link in the header that goes to GitHub */
-            header a[href^="https://github.com"] {display: none !important;}
-            
-            /* Sniper target: Streamlit Cloud's specific viewer badge */
-            [class^="viewerBadge"] {display: none !important;}
-            </style>
-            """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+# THE "COVER IT UP" HACK
+hide_github_style = """
+<style>
+/* This creates a solid patch over the top right corner */
+.github-cover {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 120px;  /* Wide enough to cover the icons */
+    height: 60px;  /* Tall enough to cover the header */
+    background-color: white; /* Matches Streamlit's default light background */
+    z-index: 999999; /* Forces it to sit on top of everything */
+}
+
+/* Make the patch dark if the phone is in dark mode */
+@media (prefers-color-scheme: dark) {
+    .github-cover {
+        background-color: #0e1117; /* Streamlit's default dark background */
+    }
+}
+
+/* Hide the Streamlit footer at the bottom */
+footer {visibility: hidden;}
+</style>
+
+<!-- This injects the actual invisible patch into the webpage -->
+<div class="github-cover"></div>
+"""
+st.markdown(hide_github_style, unsafe_allow_html=True)
 # --- ADVANCED PWA ICON HACK ---
 # This block reads your icon.png and embeds it as base64 data in the HTML header.
 # This makes it load properly on mobile home screens even locally.
