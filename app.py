@@ -6,11 +6,10 @@ import img2pdf
 import zipfile
 import base64  # Needed to embed the icon
 import os
-# Hide the GitHub icon, top menu, and Streamlit footer
+# Hide the GitHub menu and Streamlit footer, but KEEP the header and sidebar button
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
-            header {visibility: hidden;}
             footer {visibility: hidden;}
             .stAppDeployButton {display:none;}
             </style>
