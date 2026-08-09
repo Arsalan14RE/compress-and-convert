@@ -6,14 +6,23 @@ import img2pdf
 import zipfile
 import base64  # Needed to embed the icon
 import os
-# Hide the GitHub menu, Deploy button, and Streamlit footer, but KEEP the sidebar > button
+# Sniper approach: Hide ONLY the GitHub link, Deploy button, and footer
 hide_streamlit_style = """
             <style>
+            /* Hide the main menu (3 dots) */
             #MainMenu {visibility: hidden;}
+            
+            /* Hide the Streamlit footer */
             footer {visibility: hidden;}
+            
+            /* Hide the exact Deploy button */
             .stAppDeployButton {display: none;}
-            [data-testid="stToolbar"] {visibility: hidden;}
-            [data-testid="stHeaderActionElements"] {display: none;}
+            
+            /* Sniper target: Any link in the header that goes to GitHub */
+            header a[href^="https://github.com"] {display: none !important;}
+            
+            /* Sniper target: Streamlit Cloud's specific viewer badge */
+            [class^="viewerBadge"] {display: none !important;}
             </style>
             """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
