@@ -6,41 +6,51 @@ import img2pdf
 import zipfile
 import os
 import base64
+import json  # Added to properly build the mobile manifest
 
 # --- PAGE SETUP & MOBILE ICON HACK ---
 icon_path = "icon.png"
 encoded_icon = ""
 
 if os.path.exists(icon_path):
-    # Sets the browser tab icon
-    st.set_page_config(page_title="Compress and Convert", page_icon=Image.open(icon_path), layout="centered")
-    # Converts the image into text data so the phone can read it for the home screen
+    # Set the browser tab name and icon
+    st.set_page_config(page_title="easyCC", page_icon=Image.open(icon_path), layout="centered")
     with open(icon_path, "rb") as image_file:
         encoded_icon = base64.b64encode(image_file.read()).decode()
 else:
-    st.set_page_config(page_title="Compress and Convert", layout="centered")
+    st.set_page_config(page_title="easyCC", layout="centered")
 
-# --- THE PWA ICON & "COVER IT UP" HACK COMBINED ---
-# This block injects your custom icon into the mobile manifest AND hides the GitHub link
+# --- THE REAL PWA MANIFEST BUILDER ---
 if encoded_icon:
+    # 1. We build the app identity exactly as the phone expects it
+    manifest_dict = {
+        "name": "easyCC",
+        "short_name": "easyCC",
+        "start_url": ".",
+        "display": "standalone",
+        "background_color": "#ffffff",
+        "theme_color": "#ffffff",
+        "icons": [{
+            "src": f"data:image/png;base64,{encoded_icon}",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }]
+    }
+    
+    # 2. We convert it to a string, then perfectly base64 encode the WHOLE thing
+    manifest_json = json.dumps(manifest_dict)
+    manifest_b64 = base64.b64encode(manifest_json.encode('utf-8')).decode('utf-8')
+    
+    # 3. We inject the properly encoded data into the website header
     pwa_html = f"""
     <link rel="apple-touch-icon" sizes="512x512" href="data:image/png;base64,{encoded_icon}">
-    <link rel="manifest" href='data:application/manifest+json;base64,{{
-      "name": "Compress and Convert",
-      "short_name": "Compress",
-      "start_url": ".",
-      "display": "standalone",
-      "background_color": "#ffffff",
-      "icons": [{{
-          "src": "data:image/png;base64,{encoded_icon}",
-          "sizes": "512x512",
-          "type": "image/png"
-        }}]
-    }}'>
+    <link rel="manifest" href="data:application/manifest+json;base64,{manifest_b64}">
     """
 else:
     pwa_html = ""
 
+# --- THE "COVER IT UP" PRIVACY PATCH ---
 hide_and_icon_style = f"""
 {pwa_html}
 <style>
@@ -64,7 +74,7 @@ st.markdown(hide_and_icon_style, unsafe_allow_html=True)
 
 
 # --- MAIN APP UI ---
-st.title("🗜️ Compress and Convert")
+st.title("🗜️ easyCC")
 st.write("Fast, secure, and private document tools.")
 
 # Sidebar navigation
