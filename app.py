@@ -5,20 +5,46 @@ import io
 import img2pdf
 import zipfile
 import os
+import base64
 
-# --- PAGE SETUP ---
-# Grabs your icon.png for the browser tab and mobile install
+# --- PAGE SETUP & MOBILE ICON HACK ---
 icon_path = "icon.png"
+encoded_icon = ""
+
 if os.path.exists(icon_path):
+    # Sets the browser tab icon
     st.set_page_config(page_title="Compress and Convert", page_icon=Image.open(icon_path), layout="centered")
+    # Converts the image into text data so the phone can read it for the home screen
+    with open(icon_path, "rb") as image_file:
+        encoded_icon = base64.b64encode(image_file.read()).decode()
 else:
     st.set_page_config(page_title="Compress and Convert", layout="centered")
 
-# --- THE "COVER IT UP" HACK ---
-# Hides the Streamlit deploy button, GitHub menu, and footer without breaking the left sidebar menu.
-hide_github_style = """
+# --- THE PWA ICON & "COVER IT UP" HACK COMBINED ---
+# This block injects your custom icon into the mobile manifest AND hides the GitHub link
+if encoded_icon:
+    pwa_html = f"""
+    <link rel="apple-touch-icon" sizes="512x512" href="data:image/png;base64,{encoded_icon}">
+    <link rel="manifest" href='data:application/manifest+json;base64,{{
+      "name": "Compress and Convert",
+      "short_name": "Compress",
+      "start_url": ".",
+      "display": "standalone",
+      "background_color": "#ffffff",
+      "icons": [{{
+          "src": "data:image/png;base64,{encoded_icon}",
+          "sizes": "512x512",
+          "type": "image/png"
+        }}]
+    }}'>
+    """
+else:
+    pwa_html = ""
+
+hide_and_icon_style = f"""
+{pwa_html}
 <style>
-.github-cover {
+.github-cover {{
     position: fixed;
     top: 0;
     right: 0;
@@ -26,15 +52,16 @@ hide_github_style = """
     height: 60px;
     background-color: white;
     z-index: 999999;
-}
-@media (prefers-color-scheme: dark) {
-    .github-cover { background-color: #0e1117; }
-}
-footer {visibility: hidden;}
+}}
+@media (prefers-color-scheme: dark) {{
+    .github-cover {{ background-color: #0e1117; }}
+}}
+footer {{visibility: hidden;}}
 </style>
 <div class="github-cover"></div>
 """
-st.markdown(hide_github_style, unsafe_allow_html=True)
+st.markdown(hide_and_icon_style, unsafe_allow_html=True)
+
 
 # --- MAIN APP UI ---
 st.title("🗜️ Compress and Convert")
@@ -56,11 +83,9 @@ if option == "Compress Image":
     
     if uploaded_file:
         img = Image.open(uploaded_file)
-        # Convert transparent PNGs to solid JPGs
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
             
-        # Extreme compression: Shrink physical dimensions
         if scale_percent < 100:
             new_width = int(img.width * (scale_percent / 100.0))
             new_height = int(img.height * (scale_percent / 100.0))
